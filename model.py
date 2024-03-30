@@ -14,7 +14,7 @@ DEVICE = "mps" if torch.backends.mps.is_available() else "cpu"
 
 # %%
 #Hyperparameters
-EPOCHS = 500
+EPOCHS = 20
 BATCH_SIZE = 3
 LEARNING_RATE = 0.001
 LOAD_MODEL = True       
@@ -52,9 +52,11 @@ if LOAD_MODEL:
         print("\nNo checkpoint was found...\n")
 
 # %%
-es = EarlyStopping(threshold=0.001)
+es = EarlyStopping(patience = 1,threshold=0.1)
 
 # %%
+train = True
+
 while train:
     for epoch in range(EPOCHS):
         train_dataset = SemanticDataset(f"/Users/luizfelipe/Desktop/Python/MachineLearning/Projects/SemanticSegmentation/train_images", f"/Users/luizfelipe/Desktop/Python/MachineLearning/Projects/SemanticSegmentation/train_masks")
@@ -85,7 +87,7 @@ while train:
         loss_hist["Validation Loss"].append(val_loss)
 
         scheduler.step(val_loss)
-        train = es(model=model, current_loss=val_loss)
+        early = es(model=model, current_loss=val_loss)
 
 
         print(f"""\nFor epoch[{epoch + 1}/{EPOCHS}]:
@@ -94,12 +96,16 @@ while train:
               Validation Accuracy: {val_accuracy:.2f}%\n
               """)
         
-        if not train:
+        if not early:
+            train = False
+            
+            checkpoint = {"state_dict": model.state_dict(), "optimizer": optimizer.state_dict()}
+            model_saver(checkpoint=checkpoint, path=f"{os.getcwd()}/saves/model/model_checkpoint_{EPOCHS}_BCELoss.pth.tar")
+            
+            graphs.loss_graph(loss_hist, f"{os.getcwd()}/saves/outputs")
+            
             break
+        
 
-checkpoint = {"state_dict": model.state_dict(), "optimizer": optimizer.state_dict()}
-model_saver(checkpoint=checkpoint, path=f"{os.getcwd()}/saves/model/model_checkpoint_{EPOCHS}_BCELoss.pth.tar")
 
-#%%
-graphs.loss_graph(loss_hist, f"{os.getcwd()}/saves/outputs")
 # %%
