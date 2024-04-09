@@ -16,24 +16,24 @@ class EarlyStopping():
     def __call__(self, model, current_loss):
         if not self.best_loss:
             self.best_loss = current_loss
-            self.best_model = copy.deepcopy(model)
+            self.best_model = copy.deepcopy(model.state_dict())
         
         if self.best_loss - current_loss >= self.threshold:
             self.counter = 0
             self.best_loss = current_loss
-            self.best_model = self.best_model.load_state_dict(model.state_dict()) 
+            self.best_model.load_state_dict(model.state_dict()) 
         
         if self.best_loss - current_loss < self.threshold:
             self.counter += 1
             
             if self.counter >= self.patience:
-                print(f'Model stopped at counter = {self.counter}')
+                print(f'\nModel stopped at counter = {self.counter}')
                 
                 if self.load_best_model:
                     model.load_state_dict(self.best_model.state_dict())    
                 return False
         
-        print(f'Current counter: {self.counter}/{self.patience}')  
+        print(f'\nCurrent counter: {self.counter}/{self.patience}')  
         return True
         
     
