@@ -16,7 +16,7 @@ class EarlyStopping():
     def __call__(self, model, current_loss):
         if not self.best_loss:
             self.best_loss = current_loss
-            self.best_model = copy.deepcopy(model.state_dict())
+            self.best_model = copy.deepcopy(model)
         
         if self.best_loss - current_loss >= self.threshold:
             self.counter = 0
